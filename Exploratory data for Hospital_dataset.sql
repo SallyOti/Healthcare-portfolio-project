@@ -4,12 +4,9 @@ SELECT *
 FROM patient_dataset;
 
 
-SELECT COUNT(*)
-FROM patient_dataset;
-
-
-SELECT COUNT(*) AS num_deaths,YEAR(DEATHDATE)
+SELECT COUNT(*) AS num_deaths,YEAR(DEATHDATE) as death_year
 FROM patient_dataset
+WHERE YEAR(DEATHDATE) IS NOT NULL
 GROUP BY YEAR(DEATHDATE);
 
 
@@ -17,7 +14,7 @@ SELECT patient_dataset.`ï»¿Id`,ENCOUNTERCLASS,`START`,ENCOUNTERCLASS
 FROM patient_dataset JOIN encounters ON patient_dataset.`ï»¿Id`=encounters.PATIENT;
 
 
-SELECT COUNT(*),ENCOUNTERCLASS
+SELECT COUNT(*) AS Total_patient,ENCOUNTERCLASS
 FROM encounters
 GROUP BY ENCOUNTERCLASS;
 
@@ -39,6 +36,11 @@ FROM encounters JOIN payers ON encounters.PAYER=payers.ï»¿Id JOIN patient_dat
 
 
 
+SELECT DISTINCT COUNT(encounters.patient) AS totalpatient_inthis_insurance,payers.`NAME`
+FROM encounters JOIN payers ON encounters.PAYER=payers.ï»¿Id JOIN patient_dataset ON encounters.patient=patient_dataset.ï»¿Id
+GROUP BY payers.`NAME`;
+
+
 SELECT DISTINCT encounters.patient
 FROM encounters JOIN payers ON encounters.PAYER=payers.ï»¿Id
 WHERE payers.ï»¿Id IS NULL;
@@ -55,13 +57,31 @@ GROUP BY ENCOUNTERS.PATIENT,Full_name,payers.`NAME`
 ORDER BY Insurance_paid desc;
 
 SELECT DISTINCT`NAME`,ENCOUNTERCLASS,
-CASE WHEN PAYER_COVERAGE=0 THEN 'NO' ELSE 'YES' END AS Insurance_cover
+CASE WHEN PAYER_COVERAGE=0 THEN 'Not paid' ELSE 'paid' END AS Insurance_cover
 FROM encounters JOIN payers ON encounters.PAYER=payers.ï»¿Id
 ORDER BY 1,3 DESC;
 
 
+CREATE VIEW Insurance_coverage AS (SELECT DISTINCT`NAME`,ENCOUNTERCLASS,
+CASE WHEN PAYER_COVERAGE=0 THEN 'Not paid' ELSE 'paid' END AS Insurance_cover
+FROM encounters JOIN payers ON encounters.PAYER=payers.ï»¿Id
+ORDER BY 1,3 DESC);
 
 
 
+CREATE VIEW Insurance_VS_patient AS (SELECT DISTINCT COUNT(encounters.patient) AS totalpatient_inthis_insurance,payers.`NAME`
+FROM encounters JOIN payers ON encounters.PAYER=payers.ï»¿Id JOIN patient_dataset ON encounters.patient=patient_dataset.ï»¿Id
+GROUP BY payers.`NAME`);
 
+
+
+CREATE VIEW totalpatient_encounter AS SELECT COUNT(*) AS Total_patient,ENCOUNTERCLASS
+FROM encounters
+GROUP BY ENCOUNTERCLASS;
+
+
+CREATE VIEW total_yearly_deaths AS SELECT COUNT(*) AS num_deaths,YEAR(DEATHDATE) as death_year
+FROM patient_dataset
+WHERE YEAR(DEATHDATE) IS NOT NULL
+GROUP BY YEAR(DEATHDATE);
 
